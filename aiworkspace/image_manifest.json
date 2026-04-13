@@ -6,8 +6,8 @@
   "assets_dir": "assets/images",
   "summary": {
     "total": 6,
-    "placeholder": 4,
-    "local": 1,
+    "placeholder": 1,
+    "local": 4,
     "remote": 1
   },
   "pages": {
@@ -15,34 +15,34 @@
       "title": "首页",
       "images": {
         "home_banner_image": {
-          "description": "首页顶部横幅",
+          "description": "宠物小精灵广告",
           "aspect_ratio": "2:1",
           "suggested_size": "800x400",
           "format": "jpg/png/webp",
-          "asset_path": null,
+          "asset_path": "assets/images/home_banner_image.jpg",
           "image_url": null,
-          "status": "placeholder",
-          "last_updated": null
+          "status": "local",
+          "last_updated": "2026-04-13"
         },
         "home_card_1": {
-          "description": "首页卡片 1",
+          "description": "小乌龟",
           "aspect_ratio": "4:3",
           "suggested_size": "400x300",
           "format": "jpg/png",
-          "asset_path": null,
+          "asset_path": "assets/images/home_card_1.jpg",
           "image_url": null,
-          "status": "placeholder",
-          "last_updated": null
+          "status": "local",
+          "last_updated": "2026-04-13"
         },
         "home_card_2": {
-          "description": "首页卡片 2",
+          "description": "妙蛙种子",
           "aspect_ratio": "4:3",
           "suggested_size": "400x300",
           "format": "jpg/png",
-          "asset_path": null,
+          "asset_path": "assets/images/home_card_2.jpg",
           "image_url": null,
-          "status": "placeholder",
-          "last_updated": null
+          "status": "local",
+          "last_updated": "2026-04-13"
         }
       }
     },
