@@ -1,0 +1,41 @@
+{
+  "_version": "1.0.0",
+  "_comment": "Lottie 动画注册表 - 开发期管理视图。由 cs-lottie-manager Skill 维护，不进入 Flutter bundle。优先级：url > asset > 占位动画。",
+  "_last_updated": "2026-04-14",
+  "project": "cs_demo",
+  "assets_dir": "assets/animations",
+  "summary": {
+    "total": 3,
+    "placeholder": 1,
+    "local": 1,
+    "remote": 1
+  },
+  "pages": {
+    "lottie_demo": {
+      "title": "动画示例页",
+      "animations": {
+        "demo_placeholder_lottie": {
+          "description": "占位动画示例（无配置）",
+          "asset_path": null,
+          "animation_url": null,
+          "status": "placeholder",
+          "last_updated": null
+        },
+        "demo_local_lottie": {
+          "description": "本地动画示例（asset）",
+          "asset_path": "assets/animations/demo_local.json",
+          "animation_url": null,
+          "status": "local",
+          "last_updated": "2026-04-14"
+        },
+        "demo_remote_lottie": {
+          "description": "远程动画示例（URL）",
+          "asset_path": null,
+          "animation_url": "https://raw.githubusercontent.com/xvrh/lottie-flutter/master/example/assets/LottieLogo1.json",
+          "status": "remote",
+          "last_updated": "2026-04-14"
+        }
+      }
+    }
+  }
+}
