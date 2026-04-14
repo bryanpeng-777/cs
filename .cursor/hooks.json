@@ -7,6 +7,9 @@
       },
       {
         "command": ".cursor/hooks/sync-lottie-manifest.sh"
+      },
+      {
+        "command": ".cursor/hooks/sync-video-manifest.sh"
       }
     ]
   }

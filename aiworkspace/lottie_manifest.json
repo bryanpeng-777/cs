@@ -5,8 +5,8 @@
   "project": "cs_demo",
   "assets_dir": "assets/animations",
   "summary": {
-    "total": 3,
-    "placeholder": 1,
+    "total": 4,
+    "placeholder": 2,
     "local": 1,
     "remote": 1
   },
@@ -33,6 +33,18 @@
           "asset_path": null,
           "animation_url": "https://raw.githubusercontent.com/xvrh/lottie-flutter/master/example/assets/LottieLogo1.json",
           "status": "remote",
+          "last_updated": "2026-04-14"
+        }
+      }
+    },
+    "cs_ui": {
+      "title": "Cs Ui",
+      "animations": {
+        "home_loading_animation": {
+          "description": "首页加载动画",
+          "asset_path": null,
+          "animation_url": null,
+          "status": "placeholder",
           "last_updated": "2026-04-14"
         }
       }

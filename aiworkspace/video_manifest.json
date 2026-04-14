@@ -1,0 +1,61 @@
+{
+  "_version": "1.0.0",
+  "_comment": "视频注册表 - 开发期管理视图。由 cs-video-manager Skill 维护，不进入 Flutter bundle。优先级：url > asset > 占位视频。",
+  "_last_updated": "2026-04-14",
+  "project": "cs_demo",
+  "assets_dir": "assets/videos",
+  "summary": {
+    "total": 4,
+    "placeholder": 2,
+    "local": 1,
+    "remote": 1
+  },
+  "pages": {
+    "video_demo": {
+      "title": "视频管理示例页（验证用）",
+      "videos": {
+        "demo_placeholder_video": {
+          "description": "占位视频示例（无配置）",
+          "aspect_ratio": "16:9",
+          "format": "mp4/mov/m3u8",
+          "asset_path": null,
+          "video_url": null,
+          "status": "placeholder",
+          "last_updated": null
+        },
+        "demo_local_video": {
+          "description": "本地视频示例（asset）",
+          "aspect_ratio": "16:9",
+          "format": "mp4",
+          "asset_path": "assets/videos/demo_local.mp4",
+          "video_url": null,
+          "status": "local",
+          "last_updated": "2026-04-14"
+        },
+        "demo_remote_video": {
+          "description": "远程视频示例（URL）",
+          "aspect_ratio": "16:9",
+          "format": "mp4",
+          "asset_path": null,
+          "video_url": "https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4",
+          "status": "remote",
+          "last_updated": "2026-04-14"
+        }
+      }
+    },
+    "cs_video": {
+      "title": "cs_video",
+      "videos": {
+        "home_intro_video": {
+          "description": "首页介绍视频",
+          "aspect_ratio": "16:9",
+          "format": "mp4/mov/m3u8",
+          "asset_path": null,
+          "video_url": null,
+          "status": "placeholder",
+          "last_updated": null
+        }
+      }
+    }
+  }
+}
