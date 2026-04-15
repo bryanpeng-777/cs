@@ -1,7 +1,4 @@
-# 子 repo 各自独立管理，不纳入根目录 git 跟踪
-cs_framework/
-cs_ui/
-cs_infra/
+# 子 repo 作为 git submodule 独立管理（见 .gitmodules）
 
 # macOS
 .DS_Store
