@@ -5,6 +5,23 @@
 - `cs_ui`：UI 组件库（shadcn_ui 封装）
 - `cs_infra`：基础设施脚本与配置
 
+## 标准工作区目录结构
+
+cs 大仓与所有产品项目**平级**放置在同一父目录下：
+
+```
+<工作目录>/          ← 例如 ~/work/ 或 ~/projects/
+├── cs/              ← 本仓库（cs 大仓）
+│   ├── cs_framework/
+│   ├── cs_ui/
+│   ├── cs_infra/
+│   └── aiworkspace/
+├── product_a/       ← 产品项目（与 cs 同级）
+├── product_b/
+└── ...
+```
+
+产品项目通过 `path: ../cs/cs_framework` 引用框架，所有开发者路径一致，cs 代码变更立即生效。
 ## 开发环境自检（每次开始工作时必须执行）
 
 **在此项目中开始任何工作前，必须先检查 git hooks 是否已安装：**
