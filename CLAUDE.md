@@ -79,3 +79,15 @@ git push
 | cs_infra | pubspec.yaml / SKILL.md / scripts/ |
 
 Hook 脚本位于各子仓的 `scripts/post-commit.sh`，通过 `make install-hooks` 安装后生效。
+
+---
+
+## 大仓可用积木
+
+本仓库（cs）在 `cursorAGIProject` 大仓中与以下产品 App 同级：
+
+| 产品 | 本地路径 | 职责 |
+|------|---------|------|
+| cs_demo | `../demo` | Demo App，验证 cs_framework 全链路（登录/配置/数据/推送） |
+
+产品 App 通过 `pubspec.yaml` Git URL 引用本仓库的框架，本地开发时通过 `pubspec_overrides.yaml` 切换到本地 path。cs_framework/cs_ui 变更后产品立即可见（无需 push 再 pull）。
