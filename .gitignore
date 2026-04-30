@@ -1,3 +1,11 @@
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
