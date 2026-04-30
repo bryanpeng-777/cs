@@ -1,4 +1,8 @@
-# 子 repo 作为 git submodule 独立管理（见 .gitmodules）
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock
+build/
 
-# macOS
-.DS_Store
+# 本地开发 path override，不提交
+pubspec_overrides.yaml

@@ -1,9 +1,0 @@
-[submodule "cs_framework"]
-	path = cs_framework
-	url = https://github.com/bryanpeng-777/cs_framework.git
-[submodule "cs_ui"]
-	path = cs_ui
-	url = https://github.com/bryanpeng-777/cs_ui.git
-[submodule "cs_infra"]
-	path = cs_infra
-	url = https://github.com/bryanpeng-777/cs_infra.git

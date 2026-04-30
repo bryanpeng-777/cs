@@ -1,0 +1,22 @@
+name: cs_auth
+description: CS 框架认证模块 - 邮箱登录、匿名登录、账号升级、密码重置、路由守卫。
+version: 1.0.0
+homepage: https://github.com/bryanpeng-777/cs
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cs_core:
+    path: ../cs_core
+  supabase_flutter: ^2.0.0
+  device_info_plus: ^10.0.0
+  uuid: ^4.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

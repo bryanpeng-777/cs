@@ -11,9 +11,9 @@
 ## 仓库结构
 
 ```
-/Users/pengchao/cursorBiz/          ← 本地大仓工作区（非 git repo）
+work3/cursorAGIProject/cs/
 ├── cs_framework/     ← Flutter SDK（GitHub: bryanpeng-777/cs_framework）
-├── cs_ui/            ← 视觉主题包（GitHub: bryanpeng-777/cs_ui）
+├── cs_ui/            ← 视觉主题包（shadcn_ui 组件封装，ShadColorScheme 多套主题）
 └── cs_infra/         ← 基础设施（GitHub: bryanpeng-777/cs_infra）
     ├── supabase/migrations/   ← 数据库迁移脚本
     ├── mcp-server/            ← MCP Server（部署在 Railway）
@@ -187,7 +187,7 @@ cs_framework:
 位于 `cs_infra/demo/`，用于验证整套架构：
 - 连接 Supabase cs-demo 项目
 - 包含环境切换按钮（DEV / PROD）
-- 覆盖验证点：配置读取、Realtime 实时更新、图片 CDN、业务数据 CRUD、Auth
+- 覆盖验证点：配置读取、Realtime 实时更新、图片 CDN、业务数据 CRUD、Auth（含登录页、匿名跳过、邮箱注册/登录、绑定邮箱 BottomSheet、密码重置）
 
 运行：`flutter run`（需在 `demo/` 目录下）
 
@@ -201,6 +201,7 @@ cs_framework:
 4. **MCP Server 默认环境**：工具默认 `dev`，操作 prod 需显式指定或用 `promote_to_prod`
 5. **upload_image MCP 不可用**：cs-admin 的 upload_image 工具在 Railway 远端运行，无法读取本地文件路径。workaround：用 Python 脚本 + service_role_key（在 `cs_infra/mcp-server/.env`）直接调 Supabase Storage REST API 上传，格式：`POST {SUPABASE_URL}/storage/v1/object/configs/{app_id}/{filename}`，Header 加 `Authorization: Bearer {SERVICE_KEY}` 和 `x-upsert: true`
 6. **Riverpod 环境切换监听**：ConsumerStatefulWidget 中 `didChangeDependencies` 不会因 Riverpod provider 变化而触发，必须用 `ref.listen()` 在 `build()` 中监听：`ref.listen<CsEnvironment>(environmentProvider, (prev, next) { if (prev != next) _loadConfigs(); });`
-7. **business.users upsert 写法**：`.from('business.users')` 在 Dart SDK 中静默失败（把字符串当 public schema 下的表名处理），必须用 `.schema('business').from('users')`。写入后立即用 `execute_sql` 查行数验证
-8. **auth → business.users 自动同步**：新 App 接入后 `business.users` 默认无触发器，新用户注册后不会自动同步，导致有 `user_id` 外键的表 INSERT 报 23503（foreign key violation）。修复：用 Supabase MCP `apply_migration` 创建 `on_auth_user_created` 触发器，存量用户用 `execute_sql` 补填
-9. **ShadToaster 必须在 MaterialApp.builder 中注入**：使用 `ShadApp.custom` 时 `ShadToaster` 不自动包含，需在 `MaterialApp.builder` 中手动包裹 `ShadToaster(child: child)`，否则子页面调用 `ShadToaster.of(context)` 会抛 `Could not find ShadToaster InheritedWidget` 异常
+7. **shadcn_ui 版本约束**：cs_ui 依赖 `shadcn_ui: '>=0.21.0 <0.22.0'`。0.22.x 使用了 Flutter 3.27.4 中不存在的 `TapRegionUpCallback`，pubspec 声明 `flutter: ">=3.27.0"` 但实际不兼容；症状：`dart analyze` 通过但 Xcode 编译失败。
+8. **CsClient.switchEnvironment() 不存在**：CsClient 没有运行时切换环境的 API，只能在 `initialize()` 时指定。UI 上的环境切换只是更新 Riverpod state，不会真正重新连接 Supabase。
+9. **AuthManager 初始化不再自动匿名**：`initialize()` 只恢复已有 session，不创建匿名账号。匿名登录由用户在 `CsLoginPage` 主动点「跳过」触发（调用 `AuthManager.signInAnonymously()`）。新项目接入时无需、也不应在 `main.dart` 手动调用 `signInAnonymously()`。
+10. **URL Scheme 密码重置配置**：`CsClient.initialize()` 新增 `urlScheme` 参数，命名规则 `mountain{appId}`（如 appId=demo → `mountaindemo`）。iOS 需在 `Info.plist` 配置 `CFBundleURLSchemes`，Android 需在 `AndroidManifest.xml` 加 `intent-filter`。也可通过 `cs-stack-onboarding` 技能的 Step 2-3b 自动配置。Supabase Dashboard → Authentication → URL Configuration 还需添加 `{urlScheme}://reset-password` 到 Redirect URLs。

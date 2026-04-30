@@ -1,0 +1,24 @@
+name: cs_core
+description: CS 框架核心基座 - Supabase 连接、配置下发、业务数据存储、文件存储。
+version: 1.0.0
+homepage: https://github.com/bryanpeng-777/cs
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  supabase_flutter: ^2.0.0
+  hive_flutter: ^1.1.0
+  path_provider: ^2.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  assets:
+    - assets/default_configs.json

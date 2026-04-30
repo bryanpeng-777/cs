@@ -1,0 +1,20 @@
+name: cs_payment
+description: CS 框架支付模块 - RevenueCat 内购/订阅，支持自定义支付插件扩展。
+version: 1.0.0
+homepage: https://github.com/bryanpeng-777/cs
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cs_core:
+    path: ../cs_core
+  purchases_flutter: ^8.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

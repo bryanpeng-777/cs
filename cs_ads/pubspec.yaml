@@ -1,0 +1,20 @@
+name: cs_ads
+description: CS 框架广告模块 - AdMob Banner/插屏/激励视频，支持自定义广告插件扩展。
+version: 1.0.0
+homepage: https://github.com/bryanpeng-777/cs
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cs_core:
+    path: ../cs_core
+  google_mobile_ads: ^5.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

@@ -1,0 +1,24 @@
+name: cs
+
+packages:
+  - cs_core
+  - cs_auth
+  - cs_push
+  - cs_payment
+  - cs_ads
+  - cs_ui
+  - cs_auth_ui
+  - cs_framework
+
+scripts:
+  analyze:
+    run: melos exec -- flutter analyze lib/
+    description: Run flutter analyze on all packages
+
+  test:
+    run: melos exec -- flutter test
+    description: Run tests on all packages
+
+  pub_get:
+    run: melos exec -- flutter pub get
+    description: Run flutter pub get on all packages

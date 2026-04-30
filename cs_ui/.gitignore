@@ -1,0 +1,6 @@
+
+# 本地开发 path override，不提交
+pubspec_overrides.yaml
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
