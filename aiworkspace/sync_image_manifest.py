@@ -15,7 +15,7 @@ sync_image_manifest.py
    → `~/.claude/knowledge/ui-assistant/{project}/image_manifest.json`
 
 兼容开关：
-- 设置 `CS_IMAGE_MANIFEST_LEGACY_PATH=1` 时，可回退旧路径：`{workspace_root}/aiworkspace/image_manifest.json``
+- 设置 `CS_IMAGE_MANIFEST_LEGACY_PATH=1` 时，可回退旧路径：`{workspace_root}/aiworkspace/image_manifest.json`
 """
 
 import sys
