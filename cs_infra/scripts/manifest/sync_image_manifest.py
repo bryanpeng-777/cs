@@ -7,6 +7,12 @@ sync_image_manifest.py
 
 用法：
     python3 sync_image_manifest.py <dart_file_path> <workspace_root>
+
+台账路径规则（优先级从高到低）：
+1) 环境变量 `IMAGE_MANIFEST_PATH` / `CS_IMAGE_MANIFEST_PATH`（绝对路径）
+2) 若 workspace_root / dart_file 路径包含 `hanzi-cursor`：
+   `~/.claude/knowledge/ui-assistant/hanzi/image_manifest.json`
+3) 否则回退旧路径：`{workspace_root}/aiworkspace/image_manifest.json`
 """
 
 import sys
@@ -110,6 +116,46 @@ def update_summary(manifest: dict) -> None:
     }
 
 
+def _expand_path(path: str) -> str:
+    return os.path.expandvars(os.path.expanduser(path))
+
+
+def _is_hanzi_workspace(workspace_root: str, dart_file: str) -> bool:
+    w = workspace_root.replace("\\", "/")
+    d = dart_file.replace("\\", "/")
+    return ("hanzi-cursor" in w) or ("hanzi-cursor" in d)
+
+
+def resolve_manifest_path(workspace_root: str, dart_file: str) -> str:
+    explicit = os.environ.get("IMAGE_MANIFEST_PATH") or os.environ.get("CS_IMAGE_MANIFEST_PATH")
+    if explicit:
+        return _expand_path(explicit)
+
+    if _is_hanzi_workspace(workspace_root, dart_file):
+        home = os.path.expanduser("~")
+        return os.path.join(home, ".claude", "knowledge", "ui-assistant", "hanzi", "image_manifest.json")
+
+    return os.path.join(workspace_root, 'aiworkspace', 'image_manifest.json')
+
+
+def ensure_manifest_exists(manifest_path: str) -> None:
+    """If missing, create a minimal manifest skeleton (best-effort)."""
+    if os.path.exists(manifest_path):
+        return
+    today = date.today().isoformat()
+    os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
+    skeleton = {
+        "_version": "1.0.0",
+        "_comment": "图片注册表。优先级：url > asset > 占位图。由 sync_image_manifest.py 维护，不进入 Flutter bundle。",
+        "_last_updated": today,
+        "project": "hanzi" if "ui-assistant/hanzi" in manifest_path.replace("\\", "/") else "app",
+        "assets_dir": "assets/images",
+        "summary": {"total": 0, "placeholder": 0, "local": 0, "remote": 0},
+        "pages": {},
+    }
+    save_manifest(manifest_path, skeleton)
+
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: sync_image_manifest.py <dart_file> <workspace_root>", file=sys.stderr)
@@ -117,12 +163,11 @@ def main():
 
     dart_file = sys.argv[1]
     workspace_root = sys.argv[2]
-    manifest_path = os.path.join(workspace_root, 'aiworkspace', 'image_manifest.json')
+    manifest_path = resolve_manifest_path(workspace_root, dart_file)
 
     if not os.path.exists(dart_file):
         sys.exit(0)
-    if not os.path.exists(manifest_path):
-        sys.exit(0)
+    ensure_manifest_exists(manifest_path)
 
     # 读取 dart 文件
     try:
