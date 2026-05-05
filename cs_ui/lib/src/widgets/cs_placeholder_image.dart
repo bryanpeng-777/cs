@@ -27,6 +27,31 @@ class CsPlaceholderImage extends StatelessWidget {
 
     final borderRadius = theme.radius as BorderRadiusGeometry;
 
+    // 导航栏、卡片左侧等小尺寸占位：不可用 32dp 图标 + 说明文字塞进 24~44dp 盒子，否则会竖直溢出。
+    final w = width;
+    final h = height;
+    final compact = (w != null && w <= 56) || (h != null && h <= 56);
+    if (compact) {
+      final side = (w != null && h != null)
+          ? (w < h ? w : h)
+          : (w ?? h ?? 24.0);
+      final iconSize = (side * 0.58).clamp(12.0, 26.0);
+      return Container(
+        width: w,
+        height: h,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: borderRadius,
+        ),
+        child: Icon(
+          Icons.image_outlined,
+          size: iconSize,
+          color: fgColor,
+        ),
+      );
+    }
+
     return Container(
       width: width,
       height: height,

@@ -1,4 +1,4 @@
-import 'package:cs_framework/cs_framework.dart';
+import 'package:cs_core/cs_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';

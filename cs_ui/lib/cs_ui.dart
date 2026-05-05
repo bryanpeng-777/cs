@@ -1,4 +1,4 @@
-/// cs_ui — cs_framework 配套视觉主题系统
+/// cs_ui — cs_core 配套视觉主题系统
 ///
 /// 提供：
 /// - [CsApp]：顶层应用 Widget，替换 MaterialApp，自动注入当前主题

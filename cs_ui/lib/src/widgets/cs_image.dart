@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cs_framework/cs_framework.dart';
+import 'package:cs_core/cs_core.dart';
 import 'package:flutter/material.dart';
 
 import 'cs_placeholder_image.dart';
