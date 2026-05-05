@@ -10,9 +10,12 @@ sync_image_manifest.py
 
 台账路径规则（优先级从高到低）：
 1) 环境变量 `IMAGE_MANIFEST_PATH` / `CS_IMAGE_MANIFEST_PATH`（绝对路径）
-2) 若 workspace_root / dart_file 路径包含 `hanzi-cursor`：
-   `~/.claude/knowledge/ui-assistant/hanzi/image_manifest.json`
-3) 否则回退旧路径：`{workspace_root}/aiworkspace/image_manifest.json`
+2) 环境变量 `UI_ASSISTANT_PROJECT` / `IMAGE_MANIFEST_PROJECT`（project 名，映射到 knowledge/ui-assistant/{project}/）
+3) 默认：`workspace_root` 的最后一级目录名；若以 `-cursor` 结尾则去掉该后缀
+   → `~/.claude/knowledge/ui-assistant/{project}/image_manifest.json`
+
+兼容开关：
+- 设置 `CS_IMAGE_MANIFEST_LEGACY_PATH=1` 时，可回退旧路径：`{workspace_root}/aiworkspace/image_manifest.json`
 """
 
 import sys
@@ -120,10 +123,16 @@ def _expand_path(path: str) -> str:
     return os.path.expandvars(os.path.expanduser(path))
 
 
-def _is_hanzi_workspace(workspace_root: str, dart_file: str) -> bool:
-    w = workspace_root.replace("\\", "/")
-    d = dart_file.replace("\\", "/")
-    return ("hanzi-cursor" in w) or ("hanzi-cursor" in d)
+def infer_ui_assistant_project(workspace_root: str) -> str:
+    """Map a local workspace folder name to UI assistant knowledge `{project}`."""
+    explicit = os.environ.get("UI_ASSISTANT_PROJECT") or os.environ.get("IMAGE_MANIFEST_PROJECT")
+    if explicit:
+        return explicit.strip()
+
+    base = os.path.basename(os.path.normpath(workspace_root))
+    if base.endswith("-cursor") and base != "-cursor":
+        base = base[: -len("-cursor")]
+    return base or "app"
 
 
 def resolve_manifest_path(workspace_root: str, dart_file: str) -> str:
@@ -131,14 +140,15 @@ def resolve_manifest_path(workspace_root: str, dart_file: str) -> str:
     if explicit:
         return _expand_path(explicit)
 
-    if _is_hanzi_workspace(workspace_root, dart_file):
-        home = os.path.expanduser("~")
-        return os.path.join(home, ".claude", "knowledge", "ui-assistant", "hanzi", "image_manifest.json")
+    if os.environ.get("CS_IMAGE_MANIFEST_LEGACY_PATH", "").strip() in {"1", "true", "TRUE", "yes", "YES"}:
+        return os.path.join(workspace_root, "aiworkspace", "image_manifest.json")
 
-    return os.path.join(workspace_root, 'aiworkspace', 'image_manifest.json')
+    project = infer_ui_assistant_project(workspace_root)
+    home = os.path.expanduser("~")
+    return os.path.join(home, ".claude", "knowledge", "ui-assistant", project, "image_manifest.json")
 
 
-def ensure_manifest_exists(manifest_path: str) -> None:
+def ensure_manifest_exists(manifest_path: str, workspace_root: str) -> None:
     """If missing, create a minimal manifest skeleton (best-effort)."""
     if os.path.exists(manifest_path):
         return
@@ -148,7 +158,7 @@ def ensure_manifest_exists(manifest_path: str) -> None:
         "_version": "1.0.0",
         "_comment": "图片注册表。优先级：url > asset > 占位图。由 sync_image_manifest.py 维护，不进入 Flutter bundle。",
         "_last_updated": today,
-        "project": "hanzi" if "ui-assistant/hanzi" in manifest_path.replace("\\", "/") else "app",
+        "project": infer_ui_assistant_project(workspace_root),
         "assets_dir": "assets/images",
         "summary": {"total": 0, "placeholder": 0, "local": 0, "remote": 0},
         "pages": {},
@@ -167,7 +177,7 @@ def main():
 
     if not os.path.exists(dart_file):
         sys.exit(0)
-    ensure_manifest_exists(manifest_path)
+    ensure_manifest_exists(manifest_path, workspace_root)
 
     # 读取 dart 文件
     try:
