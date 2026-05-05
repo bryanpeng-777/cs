@@ -7,6 +7,15 @@ sync_lottie_manifest.py
 
 用法：
     python3 sync_lottie_manifest.py <dart_file_path> <workspace_root>
+
+台账路径规则（优先级从高到低）：
+1) 环境变量 `LOTTIE_MANIFEST_PATH` / `CS_LOTTIE_MANIFEST_PATH`（绝对路径）
+2) 环境变量 `UI_ASSISTANT_PROJECT` / `IMAGE_MANIFEST_PROJECT`（project 名）
+3) 默认：`workspace_root` 最后一级目录名；若以 `-cursor` 结尾则去尾缀
+   → `~/.claude/knowledge/ui-assistant/{project}/lottie_manifest.json`
+
+兼容开关：
+- `CS_LOTTIE_MANIFEST_LEGACY_PATH=1` → `{workspace_root}/aiworkspace/lottie_manifest.json`
 """
 
 import sys
@@ -14,6 +23,51 @@ import re
 import json
 import os
 from datetime import date
+
+
+def _expand_path(path: str) -> str:
+    return os.path.expandvars(os.path.expanduser(path))
+
+
+def infer_ui_assistant_project(workspace_root: str) -> str:
+    explicit = os.environ.get("UI_ASSISTANT_PROJECT") or os.environ.get("IMAGE_MANIFEST_PROJECT")
+    if explicit:
+        return explicit.strip()
+
+    base = os.path.basename(os.path.normpath(workspace_root))
+    if base.endswith("-cursor") and base != "-cursor":
+        base = base[: -len("-cursor")]
+    return base or "app"
+
+
+def resolve_lottie_manifest_path(workspace_root: str) -> str:
+    explicit = os.environ.get("LOTTIE_MANIFEST_PATH") or os.environ.get("CS_LOTTIE_MANIFEST_PATH")
+    if explicit:
+        return _expand_path(explicit)
+
+    if os.environ.get("CS_LOTTIE_MANIFEST_LEGACY_PATH", "").strip() in {"1", "true", "TRUE", "yes", "YES"}:
+        return os.path.join(workspace_root, "aiworkspace", "lottie_manifest.json")
+
+    project = infer_ui_assistant_project(workspace_root)
+    home = os.path.expanduser("~")
+    return os.path.join(home, ".claude", "knowledge", "ui-assistant", project, "lottie_manifest.json")
+
+
+def ensure_lottie_manifest_exists(manifest_path: str, workspace_root: str) -> None:
+    if os.path.exists(manifest_path):
+        return
+    today = date.today().isoformat()
+    os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
+    skeleton = {
+        "_version": "1.0.0",
+        "_comment": "Lottie 注册表。由 sync_lottie_manifest.py 维护，不进入 Flutter bundle。",
+        "_last_updated": today,
+        "project": infer_ui_assistant_project(workspace_root),
+        "assets_dir": "assets/lottie",
+        "summary": {"total": 0, "placeholder": 0, "local": 0, "remote": 0},
+        "pages": {},
+    }
+    save_manifest(manifest_path, skeleton)
 
 
 def infer_page(dart_file_path: str, config_key: str) -> str:
@@ -112,12 +166,11 @@ def main():
 
     dart_file = sys.argv[1]
     workspace_root = sys.argv[2]
-    manifest_path = os.path.join(workspace_root, 'aiworkspace', 'lottie_manifest.json')
+    manifest_path = resolve_lottie_manifest_path(workspace_root)
 
     if not os.path.exists(dart_file):
         sys.exit(0)
-    if not os.path.exists(manifest_path):
-        sys.exit(0)
+    ensure_lottie_manifest_exists(manifest_path, workspace_root)
 
     try:
         with open(dart_file, 'r', encoding='utf-8') as f:

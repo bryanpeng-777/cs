@@ -7,6 +7,15 @@ sync_video_manifest.py
 
 用法：
     python3 sync_video_manifest.py <dart_file_path> <workspace_root>
+
+台账路径规则（优先级从高到低）：
+1) 环境变量 `VIDEO_MANIFEST_PATH` / `CS_VIDEO_MANIFEST_PATH`（绝对路径）
+2) 环境变量 `UI_ASSISTANT_PROJECT` / `IMAGE_MANIFEST_PROJECT`（project 名）
+3) 默认：`workspace_root` 最后一级目录名；若以 `-cursor` 结尾则去尾缀
+   → `~/.claude/knowledge/ui-assistant/{project}/video_manifest.json`
+
+兼容开关：
+- `CS_VIDEO_MANIFEST_LEGACY_PATH=1` → `{workspace_root}/aiworkspace/video_manifest.json`
 """
 
 import sys
@@ -14,6 +23,51 @@ import re
 import json
 import os
 from datetime import date
+
+
+def _expand_path(path: str) -> str:
+    return os.path.expandvars(os.path.expanduser(path))
+
+
+def infer_ui_assistant_project(workspace_root: str) -> str:
+    explicit = os.environ.get("UI_ASSISTANT_PROJECT") or os.environ.get("IMAGE_MANIFEST_PROJECT")
+    if explicit:
+        return explicit.strip()
+
+    base = os.path.basename(os.path.normpath(workspace_root))
+    if base.endswith("-cursor") and base != "-cursor":
+        base = base[: -len("-cursor")]
+    return base or "app"
+
+
+def resolve_video_manifest_path(workspace_root: str) -> str:
+    explicit = os.environ.get("VIDEO_MANIFEST_PATH") or os.environ.get("CS_VIDEO_MANIFEST_PATH")
+    if explicit:
+        return _expand_path(explicit)
+
+    if os.environ.get("CS_VIDEO_MANIFEST_LEGACY_PATH", "").strip() in {"1", "true", "TRUE", "yes", "YES"}:
+        return os.path.join(workspace_root, "aiworkspace", "video_manifest.json")
+
+    project = infer_ui_assistant_project(workspace_root)
+    home = os.path.expanduser("~")
+    return os.path.join(home, ".claude", "knowledge", "ui-assistant", project, "video_manifest.json")
+
+
+def ensure_video_manifest_exists(manifest_path: str, workspace_root: str) -> None:
+    if os.path.exists(manifest_path):
+        return
+    today = date.today().isoformat()
+    os.makedirs(os.path.dirname(manifest_path), exist_ok=True)
+    skeleton = {
+        "_version": "1.0.0",
+        "_comment": "视频注册表。由 sync_video_manifest.py 维护，不进入 Flutter bundle。",
+        "_last_updated": today,
+        "project": infer_ui_assistant_project(workspace_root),
+        "assets_dir": "assets/videos",
+        "summary": {"total": 0, "placeholder": 0, "local": 0, "remote": 0},
+        "pages": {},
+    }
+    save_manifest(manifest_path, skeleton)
 
 
 def infer_page(dart_file_path: str, config_key: str) -> str:
@@ -78,79 +132,100 @@ def save_manifest(manifest_path: str, manifest: dict) -> None:
         f.write('\n')
 
 
-def all_existing_keys(manifest: dict) -> set[str]:
-    """收集 manifest 中所有已有的 configKey。"""
+def get_all_existing_keys(manifest: dict) -> set:
     keys = set()
     for page_data in manifest.get('pages', {}).values():
         keys.update(page_data.get('videos', {}).keys())
     return keys
 
 
-def sync(dart_file_path: str, workspace_root: str) -> None:
-    manifest_path = os.path.join(workspace_root, 'aiworkspace', 'video_manifest.json')
+def update_summary(manifest: dict) -> None:
+    total = placeholder = local = remote = 0
+    for page_data in manifest.get('pages', {}).values():
+        for vid in page_data.get('videos', {}).values():
+            total += 1
+            status = vid.get('status', 'placeholder')
+            if status == 'placeholder':
+                placeholder += 1
+            elif status == 'local':
+                local += 1
+            elif status == 'remote':
+                remote += 1
+    manifest['summary'] = {
+        'total': total,
+        'placeholder': placeholder,
+        'local': local,
+        'remote': remote,
+    }
 
-    if not os.path.exists(manifest_path):
-        print(f'[sync_video] manifest not found: {manifest_path}', file=sys.stderr)
-        return
+
+def main():
+    if len(sys.argv) < 3:
+        print("Usage: sync_video_manifest.py <dart_file> <workspace_root>", file=sys.stderr)
+        sys.exit(1)
+
+    dart_file = sys.argv[1]
+    workspace_root = sys.argv[2]
+    manifest_path = resolve_video_manifest_path(workspace_root)
+
+    if not os.path.exists(dart_file):
+        sys.exit(0)
+    ensure_video_manifest_exists(manifest_path, workspace_root)
 
     try:
-        with open(dart_file_path, 'r', encoding='utf-8') as f:
-            dart_content = f.read()
-    except FileNotFoundError:
-        return
+        with open(dart_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+    except Exception:
+        sys.exit(0)
 
-    found = extract_cs_videos(dart_content)
-    if not found:
-        return
+    usages = extract_cs_videos(content)
+    if not usages:
+        sys.exit(0)
 
-    manifest = load_manifest(manifest_path)
-    existing_keys = all_existing_keys(manifest)
+    try:
+        manifest = load_manifest(manifest_path)
+    except Exception:
+        sys.exit(0)
 
-    new_entries = [v for v in found if v['config_key'] not in existing_keys]
+    existing_keys = get_all_existing_keys(manifest)
+    new_entries = [u for u in usages if u['config_key'] not in existing_keys]
+
     if not new_entries:
-        return
+        sys.exit(0)
 
     today = date.today().isoformat()
-    manifest['_last_updated'] = today
-
     pages = manifest.setdefault('pages', {})
+    added = []
 
     for entry in new_entries:
         config_key = entry['config_key']
         description = entry['description']
-        page_name = infer_page(dart_file_path, config_key)
+        page_key = infer_page(dart_file, config_key)
 
-        page = pages.setdefault(page_name, {'title': page_name, 'videos': {}})
-        page['videos'][config_key] = {
+        if page_key not in pages:
+            filename = os.path.basename(dart_file).replace('.dart', '').replace('_', ' ').title()
+            pages[page_key] = {
+                'title': filename,
+                'videos': {},
+            }
+
+        pages[page_key]['videos'][config_key] = {
             'description': description,
             'aspect_ratio': '16:9',
             'format': 'mp4/mov/m3u8',
             'asset_path': None,
             'video_url': None,
             'status': 'placeholder',
-            'last_updated': None,
+            'last_updated': today,
         }
-        print(f'[sync_video] +{config_key} → {page_name}')
+        added.append(f'{page_key}.{config_key}')
 
-    # 更新 summary
-    all_videos = [
-        v
-        for page_data in pages.values()
-        for v in page_data.get('videos', {}).values()
-    ]
-    manifest['summary'] = {
-        'total': len(all_videos),
-        'placeholder': sum(1 for v in all_videos if v.get('status') == 'placeholder'),
-        'local': sum(1 for v in all_videos if v.get('status') == 'local'),
-        'remote': sum(1 for v in all_videos if v.get('status') == 'remote'),
-    }
-
+    manifest['_last_updated'] = today
+    update_summary(manifest)
     save_manifest(manifest_path, manifest)
+
+    print(f'[cs-video-manager] 新增 {len(added)} 个视频插槽: {", ".join(added)}')
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Usage: sync_video_manifest.py <dart_file> <workspace_root>')
-        sys.exit(1)
-
-    sync(sys.argv[1], sys.argv[2])
+    main()
