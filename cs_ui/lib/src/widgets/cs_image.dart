@@ -99,11 +99,12 @@ class _CsImageState extends State<CsImage> {
           );
         }
 
-        // 本地 asset 次之
+        // 本地 asset 次之（须用宿主 App 的 AssetBundle，否则会误查 cs_ui 包内资源）
         final asset = config?['asset'] as String?;
         if (asset != null && asset.isNotEmpty) {
           return Image.asset(
             asset,
+            bundle: DefaultAssetBundle.of(context),
             width: widget.width,
             height: widget.height,
             fit: widget.fit,
@@ -112,6 +113,15 @@ class _CsImageState extends State<CsImage> {
               height: widget.height,
               description: widget.description,
             ),
+          );
+        }
+
+        // 配置加载中：仅占位，避免误显示「无图源」占位（与 loaded-null 区分可选）
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return CsPlaceholderImage(
+            width: widget.width,
+            height: widget.height,
+            description: widget.description,
           );
         }
 
