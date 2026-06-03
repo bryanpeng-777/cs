@@ -111,6 +111,18 @@ class ConfigManager {
     return null;
   }
 
+  /// 同步读取随包内置的 Map 配置。
+  ///
+  /// 启动页等首屏图片不能等网络/缓存链路返回后才显示，否则短时间内会看到占位图。
+  /// 这个方法只读 bundled defaults，不触发网络请求。
+  static Map<String, dynamic>? getBundledMapSync(String key) {
+    final value = _bundledDefaults[key];
+    if (value == null) return null;
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
   /// 获取 List 配置
   static Future<List<dynamic>?> getList(String key) async {
     final value = await _get(key);

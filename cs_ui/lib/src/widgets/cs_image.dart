@@ -77,6 +77,7 @@ class _CsImageState extends State<CsImage> {
       future: _configFuture,
       builder: (context, snapshot) {
         final config = snapshot.data;
+        final bundledConfig = ConfigManager.getBundledMapSync(widget.configKey);
 
         // 远程 URL 优先
         final url = config?['url'] as String?;
@@ -99,8 +100,9 @@ class _CsImageState extends State<CsImage> {
           );
         }
 
-        // 本地 asset 次之（须用宿主 App 的 AssetBundle，否则会误查 cs_ui 包内资源）
-        final asset = config?['asset'] as String?;
+        // 本地 asset 次之。启动阶段优先用 bundled defaults，避免等待网络/旧 Hive 缓存导致占位。
+        final asset = (bundledConfig?['asset'] as String?) ??
+            (config?['asset'] as String?);
         if (asset != null && asset.isNotEmpty) {
           return Image.asset(
             asset,
