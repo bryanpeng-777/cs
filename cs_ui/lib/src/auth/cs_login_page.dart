@@ -53,6 +53,7 @@ class CsLoginPage extends StatefulWidget {
     this.title,
     this.subtitle,
     this.showSkipButton = true,
+    this.continueOnSkipFailure = false,
     this.onLoginSuccess,
     this.onSkip,
     this.onForgotPassword,
@@ -70,6 +71,9 @@ class CsLoginPage extends StatefulWidget {
 
   /// 是否显示「跳过」按钮（匿名使用），默认 true
   final bool showSkipButton;
+
+  /// 匿名登录失败时是否仍触发 [onSkip]（由业务层决定是否以游客模式继续）
+  final bool continueOnSkipFailure;
 
   /// 登录/注册成功后的回调
   final VoidCallback? onLoginSuccess;
@@ -97,7 +101,9 @@ class _CsLoginPageState extends State<CsLoginPage> {
       await AuthManager.signInAnonymously();
       widget.onSkip?.call();
     } catch (e) {
-      if (mounted) {
+      if (widget.continueOnSkipFailure) {
+        widget.onSkip?.call();
+      } else if (mounted) {
         ShadToaster.of(context).show(
           const ShadToast.destructive(
             title: Text('跳过失败'),
